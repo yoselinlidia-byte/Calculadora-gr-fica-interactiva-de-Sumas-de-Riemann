@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Sumas de Riemann 🎀 Coquette</title>
+    <!-- Chart.js para la gráfica interactiva -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Math.js para evaluar funciones de forma segura -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <!-- Fuentes bonitas de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #fff0f3;
+            --card-bg: #ffffff;
+            --primary-color: #ffb3c1;
+            --secondary-color: #ff85a1;
+            --accent-color: #d81159;
+            --text-color: #59405c;
+            --input-border: #ffccd5;
+            --shadow: 0 10px 25px rgba(255, 131, 161, 0.15);
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            box-sizing: border-box;
+            border: 2px solid #ffccd5;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #8c6d96;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls-panel {
+            background-color: #fff9fa;
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid #ffe5ec;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        input, select {
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--input-border);
+            background-color: #fff;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1rem;
+            color: var(--text-color);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px rgba(255, 133, 161, 0.3);
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        input[type="range"] {
+            accent-color: var(--secondary-color);
+            cursor: pointer;
+        }
+
+        .chart-panel {
+            background: #fff;
+            border-radius: 18px;
+            padding: 15px;
+            border: 1px solid #ffe5ec;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            min-height: 400px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 450px;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            background: #fff9fa;
+            border-radius: 18px;
+            padding: 20px;
+            border: 1px solid #ffe5ec;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .results-table th, .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ffe5ec;
+            font-size: 0.95rem;
+        }
+
+        .results-table th {
+            color: var(--accent-color);
+            font-weight: 700;
+            background-color: #ffe5ec;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .ribbon-tag {
+            display: inline-block;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <span class="ribbon-tag">🎀 🌸 Estética Coquette Math 🌸 🎀</span>
+            <h1>Cálculo Integral</h1>
+            <p>Calculadora gráfica interactiva de Sumas de Riemann</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Panel de Controles -->
+            <div class="controls-panel">
+                <div class="control-group">
+                    <label for="functionInput">Función f(x)</label>
+                    <input type="text" id="functionInput" value="x^2">
+                </div>
+
+                <div class="control-group">
+                    <label for="aInput">Extremo inferior (a)</label>
+                    <input type="number" id="aInput" value="0" step="0.1">
+                </div>
+
+                <div class="control-group">
+                    <label for="bInput">Extremo superior (b)</label>
+                    <input type="number" id="bInput" value="2" step="0.1">
+                </div>
+
+                <div class="control-group">
+                    <label for="methodSelect">Método de aproximación</label>
+                    <select id="methodSelect">
+                        <option value="midpoint">Punto Medio</option>
+                        <option value="left">Extremo Izquierdo</option>
+                        <option value="right">Extremo Derecho</option>
+                    </select>
+                </div>
+
+                <div class="control-group slider-container">
+                    <label for="nSlider">Número de particiones (n): <span id="nValue">10</span></label>
+                    <input type="range" id="nSlider" min="2" max="100" value="10">
+                </div>
+            </div>
+
+            <!-- Panel de Gráfica -->
+            <div class="chart-panel">
+                <canvas id="riemannChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabla de Resultados -->
+        <div class="results-section">
+            <h3 style="margin-top: 0; color: var(--accent-color);">Resumen de Cálculos</h3>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th>Ancho ($\Delta x$)</th>
+                        <th>Área Aproximada</th>
+                        <th>Área Exacta (Ref)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="resMethod" style="font-weight: 650;">Punto Medio</td>
+                        <td id="resDelta">-</td>
+                        <td id="resApprox" style="color: var(--accent-color); font-weight: 700;">-</td>
+                        <td id="resExact">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        function calculateRiemann() {
+            try {
+                const expr = document.getElementById('functionInput').value;
+                const a = parseFloat(document.getElementById('aInput').value);
+                const b = parseFloat(document.getElementById('bInput').value);
+                const n = parseInt(document.getElementById('nSlider').value);
+                const method = document.getElementById('methodSelect').value;
+
+                document.getElementById('nValue').innerText = n;
+
+                const compiledFn = math.compile(expr);
+                const f = (x) => {
+                    try { return compiledFn.evaluate({ x: x }); } catch (e) { return 0; }
+                };
+
+                const dx = (b - a) / n;
+                let approxArea = 0;
+                let rectData = [];
+                let labels = [];
+                let curveData = [];
+
+                // Generar puntos para la curva continua
+                const steps = 200;
+                const stepSize = (b - a) / steps;
+                for (let i = 0; i <= steps; i++) {
+                    let xVal = a + i * stepSize;
+                    labels.push(xVal.toFixed(2));
+                    curveData.push(f(xVal));
+                }
+
+                // Cálculo de rectángulos según el método
+                for (let i = 0; i < n; i++) {
+                    let x0 = a + i * dx;
+                    let x1 = a + (i + 1) * dx;
+                    let sampleX;
+
+                    if (method === 'left') {
+                        sampleX = x0;
+                    } else if (method === 'right') {
+                        sampleX = x1;
+                    } else { // midpoint
+                        sampleX = (x0 + x1) / 2;
+                    }
+
+                    let height = f(sampleX);
+                    approxArea += height * dx;
+                }
+
+                // Construir datos de barras para Chart.js
+                // Para alinear las barras con la curva, creamos un arreglo del tamaño de la curva
+                let barData = new Array(labels.length).fill(null);
+                
+                // Mapear los rectángulos a los puntos más cercanos del gráfico
+                for (let i = 0; i < n; i++) {
+                    let x0 = a + i * dx;
+                    let x1 = a + (i + 1) * dx;
+                    let sampleX = method === 'left' ? x0 : (method === 'right' ? x1 : (x0 + x1) / 2);
+                    let height = f(sampleX);
+
+                    // Encontrar índice más cercano
+                    let index = Math.round(((sampleX - a) / (b - a)) * steps);
+                    if (index >= 0 && index < barData.length) {
+                        barData[index] = height;
+                    }
+                }
+
+                // Actualizar tabla
+                document.getElementById('resMethod').innerText = method === 'left' ? 'Extremo Izquierdo' : (method === 'right' ? 'Extremo Derecho' : 'Punto Medio');
+                document.getElementById('resDelta').innerText = dx.toFixed(4);
+                document.getElementById('resApprox').innerText = approxArea.toFixed(4);
+                
+                // Intentar calcular integral analítica aproximada para referencia visual
+                document.getElementById('resExact').innerText = "Dinámica";
+
+                updateChart(labels, curveData, barData);
+
+            } catch (error) {
+                console.error("Error al calcular:", error);
+            }
+        }
+
+        function updateChart(labels, curveData, barData) {
+            const ctx = document.getElementById('riemannChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'f(x)',
+                            data: curveData,
+                            borderColor: '#d81159',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Rectángulos de Riemann',
+                            data: barData,
+                            type: 'bar',
+                            backgroundColor: 'rgba(255, 179, 193, 0.65)',
+                            borderColor: '#ff85a1',
+                            borderWidth: 1,
+                            barPercentage: 1.0,
+                            categoryPercentage: 1.0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: '#ffe5ec' },
+                            ticks: { font: { family: 'Quicksand' } }
+                        },
+                        y: {
+                            grid: { color: '#ffe5ec' },
+                            ticks: { font: { family: 'Quicksand' } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { font: { family: 'Quicksand', weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Eventos para actualizar en tiempo real
+        document.getElementById('functionInput').addEventListener('input', calculateRiemann);
+        document.getElementById('aInput').addEventListener('input', calculateRiemann);
+        document.getElementById('bInput').addEventListener('input', calculateRiemann);
+        document.getElementById('nSlider').addEventListener('input', calculateRiemann);
+        document.getElementById('methodSelect').addEventListener('change', calculateRiemann);
+
+        // Cargar al iniciar
+        window.onload = calculateRiemann;
+    </script>
+</body>
+</html>
